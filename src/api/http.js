@@ -1,3 +1,4 @@
+
 const BASE_URL = "https://jsonplaceholder.typicode.com";
 
 export class HttpError extends Error {
@@ -13,16 +14,26 @@ export async function request(
   path,
   { method = "GET", body, headers, signal } = {}
 ) {
-  const response = await fetch(`${BASE_URL}${path}`, {
-    method,
-    signal: signal ?? AbortSignal.timeout(8000),
-    headers: {
-      Accept: "application/json",
-      ...(body ? { "Content-Type": "application/json" } : {}),
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let response;
+
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      method,
+      signal: signal ?? AbortSignal.timeout(8000),
+      headers: {
+        Accept: "application/json",
+        ...(body ? { "Content-Type": "application/json" } : {}),
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (error) {
+    if (error.name === "TimeoutError" || error.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
+
+    throw new Error("Network error. Please check your connection.");
+  }
 
   const isJSON = response.headers
     .get("content-type")
