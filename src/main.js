@@ -5,6 +5,7 @@ import { api, HttpError } from "./api/http.js";
 const app = document.querySelector("#app");
 
 let posts = [];
+let searchTerm = "";
 
 app.innerHTML = `
   <main class="max-w-7xl mx-auto px-6 md:px-10 py-12">
@@ -98,6 +99,19 @@ app.innerHTML = `
 
     </section>
 
+    <section class="mb-7">
+      <label for="post-search" class="block text-lg font-semibold mb-2">
+        Search posts by title
+      </label>
+
+      <input
+        id="post-search"
+        type="search"
+        placeholder="Type a title to search..."
+        class="w-full border border-slate-300 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+    </section>
+
     <p
       id="posts-status"
       role="status"
@@ -118,6 +132,7 @@ app.innerHTML = `
 const postsContainer = document.querySelector("#posts-container");
 const postsStatus = document.querySelector("#posts-status");
 const userFilter = document.querySelector("#user-filter");
+const postSearch = document.querySelector("#post-search");
 const postForm = document.querySelector("#post-form");
 const formStatus = document.querySelector("#form-status");
 
@@ -149,14 +164,18 @@ async function loadPosts(userId = "") {
 function renderPosts() {
   postsContainer.innerHTML = "";
 
-  if (posts.length === 0) {
-    postsStatus.textContent = "No posts found.";
+  const filteredPosts = posts.filter((post) =>
+    post.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (filteredPosts.length === 0) {
+    postsStatus.textContent = "No matching posts found.";
     return;
   }
 
-  postsStatus.textContent = `${posts.length} posts found`;
+  postsStatus.textContent = `${filteredPosts.length} posts found`;
 
-  posts.forEach((post) => {
+  filteredPosts.forEach((post) => {
     const card = document.createElement("article");
 
     card.className =
@@ -201,6 +220,12 @@ function renderPosts() {
 // Filter posts by user
 userFilter.addEventListener("change", (event) => {
   loadPosts(event.target.value);
+});
+
+// Search posts by title
+postSearch.addEventListener("input", (event) => {
+  searchTerm = event.target.value.trim();
+  renderPosts();
 });
 
 // POST: Create a new post
